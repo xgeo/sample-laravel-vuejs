@@ -14,8 +14,8 @@ class CreateRelations extends Migration
     public function up()
     {
         Schema::table('products', function(Blueprint $table) {
-            $table->foreign('products_categories_id', 'fk_products_categories')
-            ->references('id')->on('products_categories')
+            $table->foreign('product_categories_id', 'fk_product_categories')
+            ->references('id')->on('product_categories')
             ->onDelete('cascade')->onUpdate('cascade');
         });
     }
@@ -28,7 +28,7 @@ class CreateRelations extends Migration
     public function down()
     {
         Schema::table('products', function(Blueprint $table) {
-            $table->dropForeign('fk_products_categories');
+            $table->dropForeign('fk_product_categories');
         });
     }
 }
