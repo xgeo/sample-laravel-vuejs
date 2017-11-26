@@ -1,6 +1,5 @@
 <template>
-<div class="container">
-    <form enctype="multipart/form-data">
+<form enctype="multipart/form-data">
         <div class="form-group">
             <label for="name">Product Name</label>
             <input type="text" class="form-control" v-model="productModel.name" name="name" id="name" placeholder="Goku God T-Shirt">
@@ -29,15 +28,12 @@
         </div>
         <button type="button" @click="submit" class="btn btn-default">Submit</button>
 </form>
-</div>
 </template>
 <script>
 const productModel = { name: '', description: '', image: '', price: '', product_categories_id: '', csrf_token: Laravel.csrfToken };
  export default {
         beforeCreate() {
-            axios.get('list-categories').then(response => {
-                this.categories = response.data;
-            });
+            axios.get('list-categories').then(response => this.categories = response.data);
         },
         data() {
             return { productModel, categories: [] };
@@ -60,6 +56,7 @@ const productModel = { name: '', description: '', image: '', price: '', product_
         submit: function(event) {
             axios.post('../product', this.$data.productModel).then((response) => {
                 alert(response.data.message);
+                this.$parent.$emit('reloadList', true);
             }).catch(error => {
                 this.catchErrors(error);
             });
