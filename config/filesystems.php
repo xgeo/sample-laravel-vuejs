@@ -57,7 +57,7 @@ return [
 
         'csv' => [
             'driver' => 'local',
-            'root' => storage_path('app/csv_filea')
+            'root' => storage_path('app/csv_files')
         ],
 
         'public' => [
