@@ -4,6 +4,7 @@ use App\Http\Controllers\Dashboard\DashboardController;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Dashboard\Requests\CreateProduteRequest;
 use App\ProductCategory;
+use App\Product;
 
 class ProductController extends DashboardController 
 {
@@ -12,9 +13,15 @@ class ProductController extends DashboardController
         return $this->getView('product.index');
     }
     
-    public function list() {}
+    public function list(Product $product) 
+    {
+        return $product->with('productCategories')->get();
+    }
 
-    public function show(int $id) {}
+    public function find(int $id) 
+    {
+        return Product::find($id);
+    }
 
     public function create() 
     {
@@ -23,6 +30,8 @@ class ProductController extends DashboardController
 
     public function upload(Request $request) 
     {
+        $message = 'Not found!';
+
         if ($request->hasFile('image')) {
             $image  = $request->file('image');
             $uid    = uniqid();
@@ -34,11 +43,11 @@ class ProductController extends DashboardController
 
             $image->storeAs('images', $fileName, 'products');
 
-            return ['file' => 'products/images/' . $fileName];
+            $message = ['file' => 'products/images/' . $fileName];
         }
-    }
 
-    public function edit(int $id) {}
+        return response()->json($message);
+    }
 
     public function listCategories() 
     {
@@ -47,17 +56,39 @@ class ProductController extends DashboardController
         
     protected function store(CreateProduteRequest $request, ProductCategory $productCategory) 
     {
+        $message = &$request;
+
         if ($data = $request->all()) {
             $productCategory->find($data['product_categories_id'])
                             ->products()
                             ->create($data);
 
-            return response()->json(['message' => 'Product save!']);
+            $message = 'Product save!';
         }
 
-        return response()->json($request);
+        return response()->json(['message' => $message]);
     }
     
-    protected function update() {}
-    protected function destroy(int $id) {}
+    protected function update($id, Request $request) 
+    {
+        try {
+            $product = Product::findOrFail($id)->update($request->all());
+            $message = 'Product updated!';
+        } catch(Exception $e) {
+            $message = $e->getMessage();
+        }
+
+        return response()->json(['message' => $message]);
+    }
+
+    protected function destroy(int $id) 
+    {
+        try {
+            $product = Product::findOrFail($id)->delete();
+            $message = 'Product removed!';
+        } catch(Exception $e) {
+            $message = $e->getMessage();
+        }
+        return response()->json(['message' => $message]);
+    }
 }
