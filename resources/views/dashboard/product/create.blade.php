@@ -1,5 +1,11 @@
 @extends('layouts.app')
 
 @section('content')
-    <create-product-component></create-product-component>
+    <div class='container'>
+        <div class='btn-control'>
+            <a href="{{ route('product.index') }}" class='btn btn-default'>Voltar</a>
+        </div>
+        <hr>
+        <create-product-component></create-product-component>
+    </div>
 @endsection
