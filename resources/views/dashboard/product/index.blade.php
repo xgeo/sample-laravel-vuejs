@@ -8,7 +8,7 @@
             <li><a href='#'>Import</a></li>
         </ul>
         <hr>
-        <p>Lista de produtos</p>
+        <p>List</p>
         <product-list :product='product'></product-list>
         <edit-product :product='product'></edit-product>
     </div>

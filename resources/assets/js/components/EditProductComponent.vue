@@ -63,7 +63,7 @@
             const files = event.target.files;
             const data = new FormData();
             data.append('image', files[0]);
-            axios.post('product/upload', data).then((response) => {
+            axios.post('product/upload-image', data).then((response) => {
                 if (response.status !== 200) return;
                 this.$data.productModel.image = response.data.file;
 

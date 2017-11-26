@@ -45,7 +45,7 @@ const productModel = { name: '', description: '', image: '', price: '', product_
             const data = new FormData();
             data.append('image', files[0]);
 
-            axios.post('upload', data).then((response) => {
+            axios.post('upload-image', data).then((response) => {
                 if (response.status !== 200) return;
                 this.$data.productModel.image = response.data.file;
 
