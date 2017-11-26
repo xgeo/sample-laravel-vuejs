@@ -55,6 +55,11 @@ return [
             'visibility' => 'public',
         ],
 
+        'csv' => [
+            'driver' => 'local',
+            'root' => storage_path('app/csv_filea')
+        ],
+
         'public' => [
             'driver' => 'local',
             'root' => storage_path('app/public'),

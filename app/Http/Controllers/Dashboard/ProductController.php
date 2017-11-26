@@ -28,23 +28,20 @@ class ProductController extends DashboardController
         return $this->getView('product.create');
     }
 
-    public function upload(Request $request) 
+    public function uploadImage(Request $request) 
     {
         $message = 'Not found!';
+        $this->makePath('products/images', 'public_path');
+        $message = $this->upload($request, 'image', ['folder' => 'images', 'disk' => 'products']);
 
-        if ($request->hasFile('image')) {
-            $image  = $request->file('image');
-            $uid    = uniqid();
-            
-            $fileName = md5($image . $image->getFilename());
-            
-            if (!is_dir(public_path('products/'))) mkdir(public_path('products'), 0777);
-            if (!is_dir(public_path('products/images/'))) mkdir(public_path('products/images/'), 0777);
+        return response()->json($message);
+    }
 
-            $image->storeAs('images', $fileName, 'products');
-
-            $message = ['file' => 'products/images/' . $fileName];
-        }
+    public function uploadCSV() 
+    {
+        $this->makePath('app/csv_files/files', 'storage_path');
+        $this->makePath('app/csv_files/imported', 'storage_path');
+        $message = $this->upload($request, 'file', ['folder' => 'files', 'disk' => 'csv']);
 
         return response()->json($message);
     }
@@ -90,5 +87,35 @@ class ProductController extends DashboardController
             $message = $e->getMessage();
         }
         return response()->json(['message' => $message]);
+    }
+
+    final private function upload($request, string $field, array $paths) 
+    {
+        if ($request->hasFile($field)) {
+            $image  = $request->file($field);
+            $uid    = uniqid();
+            
+            $fileName = md5($image . $image->getFilename());
+
+            $image->storeAs($paths['folder'], $fileName, $paths['disk']);
+
+            $message = ['file' => $paths['disk'] . '/' . $paths['folder'] . '/' . $fileName];
+
+            return $message;
+        }
+    }
+
+    final private function makePath($path, $basePath) 
+    {
+        if (strpos($path, '/') !== false) {
+            $matches = explode('/', $path);
+            $fullPath = '';
+            foreach($matches as $match) {
+                $fullPath .= $match . '/';
+                if (!is_dir($basePath($fullPath))) mkdir($basePath($fullPath), 0777);
+            }
+        } else {
+            if (!is_dir($basePath($path))) mkdir($basePath($path), 0777);
+        }
     }
 }

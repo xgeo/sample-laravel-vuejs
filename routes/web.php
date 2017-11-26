@@ -22,4 +22,4 @@ Route::get('/dashboard/product/{product}/find', 'Dashboard\ProductController@fin
 Route::get('/dashboard/product/list-categories', 'Dashboard\ProductController@listCategories');
 Route::get('/dashboard', 'Dashboard\IndexController@index')->name('home');
 Route::resource('/dashboard/product', 'Dashboard\ProductController', ['except' => ['edit', 'show']]);
-Route::post('/dashboard/product/upload', 'Dashboard\ProductController@upload');
+Route::post('/dashboard/product/upload-image', 'Dashboard\ProductController@uploadImage');
