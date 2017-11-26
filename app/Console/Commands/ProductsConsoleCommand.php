@@ -44,11 +44,7 @@ class ProductsConsoleCommand extends Command
 
             public function __construct($options) 
             {
-                foreach($options as $option) {
-                    if (method_exists($this, $option)) {
-                        $this->{$option}();
-                    }   
-                }
+                
             }
 
             public function csv_list() 
@@ -65,7 +61,7 @@ class ProductsConsoleCommand extends Command
             {
                 
             }
-            
+
         };
     }
 }
