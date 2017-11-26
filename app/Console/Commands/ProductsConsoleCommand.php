@@ -2,6 +2,8 @@
 namespace App\Console\Commands;
 
 use Illuminate\Console\Command;
+use App\Jobs\DefaultDispatcher;
+use App\Product;
 
 class ProductsConsoleCommand extends Command
 {
@@ -18,7 +20,7 @@ class ProductsConsoleCommand extends Command
      * @var string
      */
     protected $description = 'Import csv of products from file to database.
-    actions: {--csv-list="imported||default=all||not-imported"} {--csv-import} {--mail}';
+    actions: {--csv-import} {--mail}';
 
     /**
      * Create a new command instance.
@@ -41,20 +43,20 @@ class ProductsConsoleCommand extends Command
         $options    = $this->options();
 
         $routines = new class($options) {
+            
+            public $activatedRoutine;
 
             public function __construct($options) 
             {
-                
-            }
-
-            public function csv_list() 
-            {
-                
+                foreach($options as $key => $value) {
+                    if ($option) $this->activatedRoutine = str_replace('-', '_', $key);
+                }
             }
             
             public function csv_import() 
             {
-
+                // Product::firstOrCreate($array[$i]);
+                
             }
 
             public function mail() 
@@ -62,6 +64,37 @@ class ProductsConsoleCommand extends Command
                 
             }
 
+            private function toArray($filename = '', $delimiter = ',')
+            {
+                if (!file_exists($filename) || !is_readable($filename)) return false;
+            
+                $header = null;
+                $data = array();
+
+                if (($handle = fopen($filename, 'r')) !== false) {
+                    while (($row = fgetcsv($handle, 1000, $delimiter)) !== false) {
+                        if (!$header)
+                            $header = $row;
+                        else
+                            $data[] = array_combine($header, $row);
+                    }
+                    fclose($handle);
+                }
+            
+                return $data;
+            }
+
+            private function getCSV($path)
+            {
+                $file = public_path($path);
+            
+                return $this->toArray($file);  
+            }
+
         };
+
+        DefaultDispatcher::dispatch($routines)
+                        ->onConnection('redis')
+                        ->onQueue('products');
     }
 }
