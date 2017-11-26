@@ -20,9 +20,18 @@ window.axios.defaults.headers.common = {
  */
 
 Vue.component('create-product-component', require('./components/CreateProductComponent.vue'));
+Vue.component('product-list', require('./components/ProductListComponent.vue'));
+Vue.component('edit-product', require('./components/EditProductComponent.vue'));
 
 const productCategorieModel = { id: '', display: '' };
 
 const app = new Vue({
-    el: '#app'
+    el: '#app',
+    data() {
+        return {
+            product: { id: '', name: '', description: '', 
+                        image: '', price: '', 
+                        product_categories_id: '' }
+        };
+    }
 });
