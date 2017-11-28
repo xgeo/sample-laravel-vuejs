@@ -77,7 +77,12 @@ return [
             'charset' => 'utf8',
             'prefix' => '',
         ],
-
+        
+        'redis' => [
+            'driver' => 'redis',
+            'connection' => 'default',
+            'queue' => '{products}'
+        ],
     ],
 
     /*
