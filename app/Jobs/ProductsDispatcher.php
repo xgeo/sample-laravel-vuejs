@@ -17,6 +17,7 @@ class ProductsDispatcher implements ShouldQueue
 
     public $method;
     public $timeout = 120;
+    private $filePath;
     
     /**
      * Create a new job instance.
@@ -28,6 +29,8 @@ class ProductsDispatcher implements ShouldQueue
         foreach($options as $key => $value) {
             if ($value) $this->method = str_replace('-', '_', $key);
         }
+
+        $this->filePath = storage_path('app/csv_files/');
     }
 
     /**
@@ -46,7 +49,7 @@ class ProductsDispatcher implements ShouldQueue
     
     public function csv_import() 
     {
-        $this->scanDirectory(storage_path('app/csv_files/'), function($csvFiles) {
+        $this->scanDirectory($this->filePath . 'files/', function($csvFiles) {
 
             if (!count($csvFiles)) return;
 
@@ -65,13 +68,12 @@ class ProductsDispatcher implements ShouldQueue
 
                     }
 
-                    $file = storage_path("app/csv_files/{$fileName}");
-                    $importedFile = storage_path("app/csv_files/imported/{$fileName}");
+                    $file = $this->filePath . "files/{$fileName}";
+                    $importedFile = $this->filePath . "imported/{$fileName}";
 
                     if (file_exists($file)) {
 
-                        \File::move($file,
-                                    $importedFile);
+                        \File::move($file, $importedFile);
 
                         \Mail::to(User::first()->getAttribute('email'))
                             ->send(new ProductsImported($log, $importedFile));
@@ -87,11 +89,6 @@ class ProductsDispatcher implements ShouldQueue
 
             file_put_contents(storage_path("logs/import_csv-{$date}.log"), json_encode($log), FILE_APPEND);
         });
-    }
-
-    public function mail() 
-    {
-        
     }
 
     private function scanDirectory($path, $handler) 

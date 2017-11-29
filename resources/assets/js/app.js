@@ -4,7 +4,6 @@
  * includes Vue and other libraries. It is a great starting point when
  * building robust, powerful web applications using Vue and Laravel.
  */
-import Toast from 'vue-toast-plugin'
 require('./bootstrap');
 
 window.Vue = require('vue');
@@ -22,6 +21,7 @@ window.axios.defaults.headers.common = {
 Vue.component('create-product-component', require('./components/CreateProductComponent.vue'));
 Vue.component('product-list', require('./components/ProductListComponent.vue'));
 Vue.component('edit-product', require('./components/EditProductComponent.vue'));
+Vue.component('import-csv', require('./components/ImportCsvComponent.vue'));
 
 const productCategorieModel = { id: '', display: '' };
 
