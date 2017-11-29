@@ -1,10 +1,11 @@
 <?php
 namespace App\Http\Controllers\Dashboard;
-use App\Http\Controllers\Dashboard\DashboardController;
+use App\Http\Controllers\Dashboard\Requests\UploadCsvRequest;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Dashboard\Requests\CreateProduteRequest;
 use App\ProductCategory;
 use App\Product;
+use Illuminate\Http\UploadedFile;
 
 class ProductController extends DashboardController 
 {
@@ -30,18 +31,26 @@ class ProductController extends DashboardController
 
     public function uploadImage(Request $request) 
     {
-        $message = 'Not found!';
         $this->makePath('products/images', 'public_path');
         $message = $this->upload($request, 'image', ['folder' => 'images', 'disk' => 'products']);
 
         return response()->json($message);
     }
 
-    public function uploadCSV() 
+    public function import()
     {
-        $this->makePath('app/csv_files/files', 'storage_path');
-        $this->makePath('app/csv_files/imported', 'storage_path');
-        $message = $this->upload($request, 'file', ['folder' => 'files', 'disk' => 'csv']);
+        return $this->getView('product.import');
+    }
+
+    public function uploadCSV(UploadCsvRequest $request)
+    {
+        $message = &$request;
+
+        if ($request->all()) {
+            $this->makePath('app/csv_files/files', 'storage_path');
+            $this->makePath('app/csv_files/imported', 'storage_path');
+            $message = $this->upload($request, 'file', ['folder' => 'files', 'disk' => 'csv_files']);
+        }
 
         return response()->json($message);
     }
@@ -69,9 +78,9 @@ class ProductController extends DashboardController
     protected function update($id, Request $request) 
     {
         try {
-            $product = Product::findOrFail($id)->update($request->all());
+            Product::findOrFail($id)->update($request->all());
             $message = 'Product updated!';
-        } catch(Exception $e) {
+        } catch(\Exception $e) {
             $message = $e->getMessage();
         }
 
@@ -81,9 +90,9 @@ class ProductController extends DashboardController
     protected function destroy(int $id) 
     {
         try {
-            $product = Product::findOrFail($id)->delete();
+            Product::findOrFail($id)->delete();
             $message = 'Product removed!';
-        } catch(Exception $e) {
+        } catch(\Exception $e) {
             $message = $e->getMessage();
         }
         return response()->json(['message' => $message]);
@@ -92,14 +101,14 @@ class ProductController extends DashboardController
     final private function upload($request, string $field, array $paths) 
     {
         if ($request->hasFile($field)) {
+            /** @var UploadedFile $image */
             $image  = $request->file($field);
-            $uid    = uniqid();
-            
-            $fileName = md5($image . $image->getFilename());
+
+            $fileName = md5($image . uniqid() . $image->getFilename()) . '.' . $image->getClientOriginalExtension();
 
             $image->storeAs($paths['folder'], $fileName, $paths['disk']);
 
-            $message = ['file' => $paths['disk'] . '/' . $paths['folder'] . '/' . $fileName];
+            $message = ['file' => $paths['disk'] . '/' . $paths['folder'] . '/' . $fileName, 'message' => 'Upload successfully!'];
 
             return $message;
         }
