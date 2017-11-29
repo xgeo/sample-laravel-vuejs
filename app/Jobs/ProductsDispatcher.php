@@ -2,12 +2,14 @@
 
 namespace App\Jobs;
 
+use App\Mail\ProductsImported;
+use App\Product;
+use App\User;
 use Illuminate\Bus\Queueable;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
-use Symfony\Component\Finder\Iterator\RecursiveDirectoryIterator;
 
 class ProductsDispatcher implements ShouldQueue
 {
@@ -37,7 +39,7 @@ class ProductsDispatcher implements ShouldQueue
     {
         try {
             $this->{$this->method}();
-        } catch(Exception $e) {
+        } catch(\Exception $e) {
             dd($e->getMessage());
         }
     }
@@ -45,17 +47,45 @@ class ProductsDispatcher implements ShouldQueue
     public function csv_import() 
     {
         $this->scanDirectory(storage_path('app/csv_files/'), function($csvFiles) {
-            foreach($csvFiles as $fileName => $arrayInsert) {
 
-                $date = (new \DateTime())->format('Y-m-d H:i:s.v');
-                
-                if (!($product = Product::create($arrayInsert))) {
-                    file_put_contents(storage_path("logs/error_import_csv-{$date}.log"), json_encode([$fileName => $arrayInsert]), \FILE_APPEND);
+            if (!count($csvFiles)) return;
+
+            $date = (new \DateTime())->format('Y-m-d H:i');
+            $log = [];
+            $product = '';
+
+            try {
+                \DB::beginTransaction();
+
+                foreach($csvFiles as $fileName => $dataInsert) {
+
+                    foreach($dataInsert as $data) {
+                        $product = Product::create($data);
+                        $log[] = [$fileName => $product];
+
+                    }
+
+                    $file = storage_path("app/csv_files/{$fileName}");
+                    $importedFile = storage_path("app/csv_files/imported/{$fileName}");
+
+                    if (file_exists($file)) {
+
+                        \File::move($file,
+                                    $importedFile);
+
+                        \Mail::to(User::first()->getAttribute('email'))
+                            ->send(new ProductsImported($log, $importedFile));
+                    }
+
+                    \DB::commit();
                 }
 
-                file_put_contents(storage_path("logs/success_import_csv-{$date}.log"), json_encode([$fileName => $product]), \FILE_APPEND);
-                Storage::move(storage_path("app/csv_files/{$fileName}"), storage_path("app/csv_files/imported/{$fileName}"));
+            } catch(\Exception $exception) {
+                $log = [$fileName => $product, 'error' => $exception->getMessage()];
+                \DB::rollBack();
             }
+
+            file_put_contents(storage_path("logs/import_csv-{$date}.log"), json_encode($log), FILE_APPEND);
         });
     }
 
@@ -70,10 +100,10 @@ class ProductsDispatcher implements ShouldQueue
         foreach(glob("{$path}*.csv", GLOB_BRACE) as $i => $file) {
             $csvfiles[basename($file)] = $this->getCSV($file);
         }
-        $handler($csvfiles);
+        return $handler($csvfiles);
     }
 
-    private function getCSV(string $filename, $delimiter = ',')
+    private function getCSV(string $filename, string $delimiter = ',')
     {
         if (!file_exists($filename) || !is_readable($filename)) return false;
         
@@ -95,7 +125,7 @@ class ProductsDispatcher implements ShouldQueue
 
                 return $data;
             }
-        } catch(Excpetion $e) {
+        } catch(\Exception $e) {
             dd($e->getMessage());
         }
     }
